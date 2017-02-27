@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="io.virtualapp"
     >
 
@@ -21,34 +22,23 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".home.HomeActivity"/>
+        <activity
+            android:name=".home.HomeActivity"/>
+
         <activity
             android:name=".home.ListAppActivity"
             android:theme="@style/AppListTheme"/>
 
         <activity
             android:name=".home.LoadingActivity"
-            android:theme="@style/TransparentTheme"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:taskAffinity="va.task.loading"/>
+            android:taskAffinity="va.task.loading"
+            android:theme="@style/TransparentTheme"/>
 
         <activity
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
-            android:name=".users.UserListActivity"/>
-
-
-        <meta-data
-            android:name="UMENG_APPKEY"
-            android:value="5792f68f67e58e08ee000ee1">
-        </meta-data>
-        <meta-data
-            android:name="UMENG_CHANNEL"
-            android:value="Umeng">
-        </meta-data>
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
+            android:name=".users.UserListActivity"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"/>
     </application>
 
 

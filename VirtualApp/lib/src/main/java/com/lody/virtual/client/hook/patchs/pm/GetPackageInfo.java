@@ -1,11 +1,11 @@
 package com.lody.virtual.client.hook.patchs.pm;
 
 import android.content.pm.PackageInfo;
-import android.os.Process;
 
 import com.lody.virtual.client.hook.base.Hook;
-import com.lody.virtual.client.local.VPackageManager;
+import com.lody.virtual.client.ipc.VPackageManager;
 import com.lody.virtual.helper.utils.ComponentUtils;
+import com.lody.virtual.helper.utils.VLog;
 import com.lody.virtual.os.VUserHandle;
 
 import java.lang.reflect.Method;
@@ -13,9 +13,7 @@ import java.lang.reflect.Method;
  * @author Lody
  *
  *
- *         适配插件的包信息获取.
- *
- *         原型: public PackageInfo getPackageInfo(String packageName, int flags,
+ *         public PackageInfo getPackageInfo(String packageName, int flags,
  *         int userId)
  */
 public final class GetPackageInfo extends Hook {
@@ -26,18 +24,20 @@ public final class GetPackageInfo extends Hook {
 	}
 
 	@Override
-	public boolean beforeHook(Object who, Method method, Object... args) {
+	public boolean beforeCall(Object who, Method method, Object... args) {
 		return args != null && args[0] != null;
 	}
 
 	@Override
-	public Object onHook(Object who, Method method, Object... args) throws Throwable {
+	public Object call(Object who, Method method, Object... args) throws Throwable {
 		String pkg = (String) args[0];
 		int flags = (int) args[1];
 		int userId = VUserHandle.myUserId();
+		long before = System.currentTimeMillis();
 		PackageInfo packageInfo = VPackageManager.get().getPackageInfo(pkg, flags, userId);
+		long delta = System.currentTimeMillis() - before;
 		if (packageInfo != null) {
-			packageInfo.applicationInfo.uid = Process.myUid();
+			VLog.d(getClass().getSimpleName(), "get pkg : " + pkg + " spend " + delta + "ms.");
 			return packageInfo;
 		}
 		packageInfo = (PackageInfo) method.invoke(who, args);

@@ -3,11 +3,10 @@ package io.virtualapp.home.models;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
-import android.os.Environment;
 
 import com.lody.virtual.client.core.InstallStrategy;
 import com.lody.virtual.client.core.VirtualCore;
-import com.lody.virtual.helper.proto.AppSetting;
+import com.lody.virtual.remote.AppSetting;
 import com.lody.virtual.os.VUserHandle;
 
 import org.jdeferred.Promise;
@@ -15,6 +14,7 @@ import org.jdeferred.Promise;
 import java.io.File;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -27,17 +27,15 @@ import io.virtualapp.abs.ui.VUiKit;
 public class AppRepository implements AppDataSource {
 
 	private static final Collator COLLATOR = Collator.getInstance(Locale.CHINA);
-	private static List<String> sdCardScanPaths = new ArrayList<>();
-
-	static {
-		String sdCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-		sdCardScanPaths.add(sdCardPath);
-		sdCardScanPaths.add(sdCardPath + File.separator + "wandoujia" + File.separator + "app");
-		sdCardScanPaths
-				.add(sdCardPath + File.separator + "tencent" + File.separator + "tassistant" + File.separator + "apk");
-		sdCardScanPaths.add(sdCardPath + File.separator + "BaiduAsa9103056");
-		sdCardScanPaths.add(sdCardPath + File.separator + "360Download");
-	}
+	private static final List<String> sdCardScanPaths = Arrays.asList(
+			".",
+			"wandoujia/app",
+			"tencent/tassistant/apk",
+			"BaiduAsa9103056",
+			"360Download",
+			"pp/downloader",
+			"pp/downloader/apk",
+			"pp/downloader/silent/apk");
 
 	private Context mContext;
 
@@ -72,21 +70,21 @@ public class AppRepository implements AppDataSource {
 	}
 
 	@Override
-	public Promise<List<AppModel>, Throwable, Void> getSdCardApps(Context context) {
+	public Promise<List<AppModel>, Throwable, Void> getStorageApps(Context context, File rootDir) {
 		return VUiKit.defer().when(() -> {
-			return pkgInfosToAppModels(context, findAndParseAPKs(context, sdCardScanPaths), false);
+			return pkgInfosToAppModels(context, findAndParseAPKs(context, rootDir, sdCardScanPaths), false);
 		});
 	}
 
-	private List<PackageInfo> findAndParseAPKs(Context context, List<String> pathes) {
+	private List<PackageInfo> findAndParseAPKs(Context context, File rootDir, List<String> paths) {
 		List<PackageInfo> pkgs = new ArrayList<>();
-		if (pathes == null)
+		if (paths == null)
 			return pkgs;
-		for (String path : pathes) {
-			File dir = new File(path);
-			if (!dir.exists() || !dir.isDirectory())
+		for (String path : paths) {
+			File[] dirFiles = new File(rootDir, path).listFiles();
+			if (dirFiles == null)
 				continue;
-			for (File f : dir.listFiles()) {
+			for (File f : dirFiles) {
 				if (!f.getName().toLowerCase().endsWith(".apk"))
 					continue;
 				PackageInfo pkgInfo = null;
@@ -95,7 +93,7 @@ public class AppRepository implements AppDataSource {
 					pkgInfo.applicationInfo.sourceDir = f.getAbsolutePath();
 					pkgInfo.applicationInfo.publicSourceDir = f.getAbsolutePath();
 				} catch (Exception e) {
-					e.printStackTrace();
+					// Ignore
 				}
 				if (pkgInfo != null)
 					pkgs.add(pkgInfo);
