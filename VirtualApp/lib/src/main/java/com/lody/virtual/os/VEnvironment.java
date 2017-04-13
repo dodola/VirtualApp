@@ -1,8 +1,10 @@
 package com.lody.virtual.os;
 
 import android.content.Context;
+import android.os.Build;
 
 import com.lody.virtual.client.core.VirtualCore;
+import com.lody.virtual.helper.utils.FileUtils;
 import com.lody.virtual.helper.utils.VLog;
 
 import java.io.File;
@@ -19,7 +21,6 @@ public class VEnvironment {
     private static final File DATA_DIRECTORY;
     private static final File USER_DIRECTORY;
     private static final File DALVIK_CACHE_DIRECTORY;
-    private static final File RES_APK_DIRECTORY;
 
     static {
         File host = new File(getContext().getApplicationInfo().dataDir);
@@ -31,8 +32,18 @@ public class VEnvironment {
         USER_DIRECTORY = ensureCreated(new File(DATA_DIRECTORY, "user"));
         // Point to: /opt/
         DALVIK_CACHE_DIRECTORY = ensureCreated(new File(ROOT, "opt"));
+    }
 
-        RES_APK_DIRECTORY = ensureCreated(new File(getContext().getFilesDir(),"virtual-apk-res"));
+    public static void systemReady(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                FileUtils.chmod(ROOT.getAbsolutePath(), FileUtils.FileMode.MODE_755);
+                FileUtils.chmod(DATA_DIRECTORY.getAbsolutePath(), FileUtils.FileMode.MODE_755);
+                FileUtils.chmod(getDataAppDirectory().getAbsolutePath(), FileUtils.FileMode.MODE_755);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -53,8 +64,7 @@ public class VEnvironment {
     }
 
     public static File getPackageResourcePath(String packgeName) {
-        File dir = ensureCreated(RES_APK_DIRECTORY);
-        return new File(dir, packgeName + "-res.apk");
+        return new File(getDataAppPackageDirectory(packgeName), "base.apk");
     }
 
     public static File getDataAppDirectory() {
@@ -73,6 +83,22 @@ public class VEnvironment {
         return new File(getSystemSecureDirectory(), "account-list.ini");
     }
 
+    public static File getPackageListFile() {
+        return new File(getSystemSecureDirectory(), "packages.ini");
+    }
+
+    /**
+     *
+     * @return Virtual storage config file
+     */
+    public static File getVSConfigFile() {
+        return new File(getSystemSecureDirectory(), "vss.ini");
+    }
+
+    public static File getBakPackageListFile() {
+        return new File(getSystemSecureDirectory(), "packages.ini.bak");
+    }
+
 
     public static File getJobConfigFile() {
         return new File(getSystemSecureDirectory(), "job-list.ini");
@@ -88,6 +114,18 @@ public class VEnvironment {
 
     public static File getDataAppPackageDirectory(String packageName) {
         return ensureCreated(new File(getDataAppDirectory(), packageName));
+    }
+
+    public static File getPackageCacheFile(String packageName) {
+        return new File(getDataAppPackageDirectory(packageName), "package.ini");
+    }
+
+    public static File getSignatureFile(String packageName) {
+        return new File(getDataAppPackageDirectory(packageName), "signature.ini");
+    }
+
+    public static File getUserSystemDirectory() {
+        return USER_DIRECTORY;
     }
 
     public static File getUserSystemDirectory(int userId) {

@@ -8,6 +8,7 @@
 
 #include <string>
 #include <map>
+#include <list>
 #include <jni.h>
 #include <dlfcn.h>
 #include <stddef.h>
@@ -26,9 +27,11 @@
 
 
 namespace IOUniformer {
-    void startUniformer(int api_level);
+    void startUniformer(int api_level, int preview_api_level);
 
     void redirect(const char*orig_path, const char*new_path);
+
+    void readOnly(const char*path);
 
     const char *query(const char *orig_path);
 

@@ -11,7 +11,6 @@ import android.app.Notification;
 import android.app.IServiceConnection;
 import android.app.IActivityManager.ContentProviderHolder;
 import com.lody.virtual.server.interfaces.IProcessObserver;
-import com.lody.virtual.server.interfaces.IUiObserver;
 
 
 interface IActivityManager {
@@ -23,10 +22,6 @@ interface IActivityManager {
     int getSystemPid();
 
     int getUidByPid(int pid);
-
-    void registerUIObserver(IUiObserver observer);
-
-    void unregisterUIObserver(IUiObserver observer);
 
     boolean isAppProcess(String processName);
 
@@ -55,6 +50,8 @@ interface IActivityManager {
     void handleApplicationCrash();
 
     void appDoneExecuting();
+
+    int startActivities(in Intent[] intents, in String[] resolvedTypes, in IBinder token, in Bundle options, in int userId);
 
     int startActivity(in Intent intent, in ActivityInfo info, in IBinder resultTo, in Bundle options, String resultWho, int requestCode, int userId);
 
@@ -108,9 +105,9 @@ interface IActivityManager {
 
     void removePendingIntent(IBinder binder);
 
+    String getPackageForIntentSender(IBinder binder);
+
     void processRestarted(in String packageName, in String processName, int userId);
 
     void broadcastFinish(in PendingResultData res);
-
-    Intent dispatchStickyBroadcast(in IntentFilter filter);
 }
