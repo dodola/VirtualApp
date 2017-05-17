@@ -23,6 +23,7 @@ import android.os.Message;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.StrictMode;
+import android.util.Log;
 
 import com.lody.virtual.client.core.CrashHandler;
 import com.lody.virtual.client.core.InvocationStubManager;
@@ -45,7 +46,6 @@ import com.lody.virtual.os.VEnvironment;
 import com.lody.virtual.os.VUserHandle;
 import com.lody.virtual.remote.InstalledAppInfo;
 import com.lody.virtual.remote.PendingResultData;
-import com.lody.virtual.server.secondary.FakeIdentityBinder;
 import com.taobao.android.dex.interpret.ARTUtils;
 
 import java.io.File;
@@ -143,13 +143,7 @@ public final class VClientImpl extends IVClient.Stub {
 
     @Override
     public IBinder getAppThread() {
-        Binder appThread = ActivityThread.getApplicationThread.call(VirtualCore.mainThread());
-        return new FakeIdentityBinder(appThread) {
-            @Override
-            protected int getFakeUid() {
-                return Process.SYSTEM_UID;
-            }
-        };
+        return ActivityThread.getApplicationThread.call(VirtualCore.mainThread());
     }
 
     @Override
@@ -230,15 +224,9 @@ public final class VClientImpl extends IVClient.Stub {
         data.appInfo = VPackageManager.get().getApplicationInfo(packageName, 0, getUserId(vuid));
         data.processName = processName;
         data.providers = VPackageManager.get().queryContentProviders(processName, getVUid(), PackageManager.GET_META_DATA);
+        Log.i(TAG, "Binding application " + data.appInfo.packageName + " (" + data.processName + ")");
         mBoundApplication = data;
         VirtualRuntime.setupRuntime(data.processName, data.appInfo);
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public synchronized void start() {
-                new Exception().printStackTrace();
-                super.start();
-            }
-        });
         int targetSdkVersion = data.appInfo.targetSdkVersion;
         if (targetSdkVersion < Build.VERSION_CODES.GINGERBREAD) {
             StrictMode.ThreadPolicy newPolicy = new StrictMode.ThreadPolicy.Builder(StrictMode.getThreadPolicy()).permitNetwork().build();
